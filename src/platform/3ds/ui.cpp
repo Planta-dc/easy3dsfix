@@ -47,7 +47,6 @@ using namespace std::chrono_literals;
 #endif
 
 namespace {
-	Point touch_pos;
 	bool released_touch = true;
 	enum class screen_state { off, keep, touched, refresh };
 	screen_state bottom_state = screen_state::refresh;
@@ -291,8 +290,6 @@ bool CtrUi::ProcessEvents() {
 				keys[keys_tbl[col + (row * 4)]] = true;
 			}
 
-			touch_pos.x = pos.px;
-			touch_pos.y = pos.py;
 		} else if (released_touch) {
 			// Turn on touch screen
 			ToggleBottomScreen(true);
@@ -377,36 +374,6 @@ void CtrUi::UpdateDisplay() {
 
 	// bottom screen
 #ifndef _DEBUG
-	// darkened button with outline
-	auto draw_button = [this](Point p, int w, int h) {
-		u8 col = p.x / w;
-		u8 row = p.y / h;
-		int x = col * w;
-		int y = row * h;
-		int b = 2; // border width
-		float z = 0.6f;
-		constexpr u32 white = C2D_Color32f(1, 1, 1, 1);
-		constexpr u32 darkgray = C2D_Color32f(0.5f, 0.5f, 0.5f, 1);
-		constexpr u32 lightgray = C2D_Color32f(0.8f, 0.8f, 0.8f, 1);
-		constexpr u32 transblack = C2D_Color32f(0, 0, 0, 0.3f);
-
-		C2D_DrawRectSolid(x + b, y + b, z, w - b * 2, h - b * 2, transblack); // inner layer
-		C2D_DrawRectangle(x, y, z, w, b, darkgray, lightgray, darkgray, lightgray); // top
-		C2D_DrawRectangle(x, y, z, b, h, darkgray, darkgray, lightgray, lightgray); // left
-		C2D_DrawRectangle(x + w - b, y, z, b, h, lightgray, lightgray, white, white); // right
-		C2D_DrawRectangle(x, y + h - b, z, w, b, lightgray, white, lightgray, white); // bottom
-	};
-
-	// "circle" cursor
-	auto draw_cursor = [this](Point p) {
-		float z = 0.7f;
-		constexpr u32 green = C2D_Color32f(0.1f, 0.7f, 0.1f, 0.9f);
-		C2D_DrawRectSolid(p.x-1, p.y, z, 3, 1, green);
-		C2D_DrawRectSolid(p.x, p.y-1, z, 1, 3, green);
-		// real circle, requires state change, so slower
-		//C2D_DrawCircleSolid(p.x, p.y, z, 2, green);
-	};
-
 	// battery indicator
 	auto draw_battery = [this](int x, int y) {
 		int w = battery.image.subtex->width;
@@ -424,8 +391,8 @@ void CtrUi::UpdateDisplay() {
 		C2D_DrawImageAt({&keyb_tex, Tex3DS_GetSubTexture(keyb_t3x, 0)}, 0, 0, z);
 
 		if (bottom_state == screen_state::touched) {
-			draw_button(touch_pos, button_width, button_height);
-			draw_cursor(touch_pos);
+			// Keep touch input but avoid drawing the touch highlight/cursor over the keypad.
+			// Touch overlays may cause moving color corruption on some 3DS units.
 
 			// Touch finished, do final redraw
 			bottom_state = screen_state::refresh;
