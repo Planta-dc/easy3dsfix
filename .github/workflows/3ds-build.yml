@@ -92,6 +92,21 @@ jobs:
           ./2_build_toolchain.sh 2>&1 | tee -a "$GITHUB_WORKSPACE/dependencies-build.log"
           ./3_cleanup.sh 2>&1 | tee -a "$GITHUB_WORKSPACE/dependencies-build.log"
 
+      - name: Surface dependency failure details
+        if: failure() && steps.dependency-cache.outputs.cache-hit != 'true'
+        run: |
+          if [[ ! -f dependencies-build.log ]]; then
+            echo "::error title=3DS dependency build::Build log was not created."
+            exit 0
+          fi
+          excerpt="$(grep -Ein 'error:|failed|failure|fatal|undefined|not found|cannot|no such file|configure:' dependencies-build.log | tail -n 30 || true)"
+          if [[ -z "$excerpt" ]]; then
+            excerpt="$(tail -n 30 dependencies-build.log)"
+          fi
+          while IFS= read -r line; do
+            [[ -n "$line" ]] && echo "::error title=3DS dependency build excerpt::$line"
+          done <<< "$excerpt"
+
       - name: Configure Player
         run: |
           set -o pipefail
