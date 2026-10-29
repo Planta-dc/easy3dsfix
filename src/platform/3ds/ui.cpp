@@ -384,7 +384,7 @@ void CtrUi::UpdateDisplay() {
 		int x = col * w;
 		int y = row * h;
 		int b = 2; // border width
-		int z = 0.6f;
+		float z = 0.6f;
 		constexpr u32 white = C2D_Color32f(1, 1, 1, 1);
 		constexpr u32 darkgray = C2D_Color32f(0.5f, 0.5f, 0.5f, 1);
 		constexpr u32 lightgray = C2D_Color32f(0.8f, 0.8f, 0.8f, 1);
@@ -399,7 +399,7 @@ void CtrUi::UpdateDisplay() {
 
 	// "circle" cursor
 	auto draw_cursor = [this](Point p) {
-		int z = 0.7f;
+		float z = 0.7f;
 		constexpr u32 green = C2D_Color32f(0.1f, 0.7f, 0.1f, 0.9f);
 		C2D_DrawRectSolid(p.x-1, p.y, z, 3, 1, green);
 		C2D_DrawRectSolid(p.x, p.y-1, z, 1, 3, green);
