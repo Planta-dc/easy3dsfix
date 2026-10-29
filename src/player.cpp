@@ -139,6 +139,11 @@ namespace Player {
 
 	int frame_draw_accumulator = 0;
 	int frame_draw_percentage = 100;
+#ifdef __3DS__
+	double performance_frame_ms = 0.0;
+	double performance_update_ms = 0.0;
+	double performance_draw_ms = 0.0;
+#endif
 
 #ifdef __EMSCRIPTEN__
 	std::string emscripten_game_name;
@@ -292,6 +297,9 @@ void Player::MainLoop() {
 #ifdef __3DS__
 	const auto perf_frame_end = PerfClock::now();
 	const double perf_frame_ms = std::chrono::duration<double, std::milli>(perf_frame_end - perf_frame_start).count();
+	performance_frame_ms = perf_frame_ms;
+	performance_update_ms = std::chrono::duration<double, std::milli>(perf_update_end - perf_frame_start).count();
+	performance_draw_ms = std::chrono::duration<double, std::milli>(perf_frame_end - perf_update_end).count();
 	if (perf_frame_ms >= 50.0) {
 		++perf_slow_frames;
 		if (perf_frame_ms > perf_worst_frame_ms) {
@@ -473,6 +481,14 @@ void Player::IncFrame() {
 		Main_Data::game_system->IncFrameCounter();
 	}
 }
+
+#ifdef __3DS__
+void Player::GetPerformanceFrameTimes(double& frame_ms, double& update_ms, double& draw_ms) {
+	frame_ms = performance_frame_ms;
+	update_ms = performance_update_ms;
+	draw_ms = performance_draw_ms;
+}
+#endif
 
 int Player::GetFrames() {
 	return frames;

@@ -79,6 +79,16 @@ void BaseUi::SetPerformanceMode(bool enabled) {
 	Player::SetFrameSkip(enabled ? 50 : 100);
 }
 
+#ifdef __3DS__
+void BaseUi::SetPerformanceMonitor(bool enabled) {
+	vcfg.performance_monitor.Set(enabled);
+}
+
+bool BaseUi::GetPerformanceMonitor() const {
+	return vcfg.performance_monitor.Get();
+}
+#endif
+
 void BaseUi::SetBattleAnimationFrames(ConfigEnum::BattleAnimationFrames frames) {
 	vcfg.battle_animation_frames.Set(frames);
 }

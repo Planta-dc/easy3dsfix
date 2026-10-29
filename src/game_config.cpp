@@ -598,6 +598,9 @@ void Game_Config::LoadFromStream(Filesystem_Stream::InputStream& is) {
 	video.fps.FromIni(ini);
 	video.fps_limit.FromIni(ini);
 	video.performance_mode.FromIni(ini);
+#ifdef __3DS__
+	video.performance_monitor.FromIni(ini);
+#endif
 	video.battle_animation_frames.FromIni(ini);
 	video.flash_tone_effects.FromIni(ini);
 	video.weather_effects.FromIni(ini);
@@ -701,6 +704,9 @@ void Game_Config::WriteToStream(Filesystem_Stream::OutputStream& os) const {
 	video.fps.ToIni(os);
 	video.fps_limit.ToIni(os);
 	video.performance_mode.ToIni(os);
+#ifdef __3DS__
+	video.performance_monitor.ToIni(os);
+#endif
 	video.battle_animation_frames.ToIni(os);
 	video.flash_tone_effects.ToIni(os);
 	video.weather_effects.ToIni(os);

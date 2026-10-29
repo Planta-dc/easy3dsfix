@@ -102,6 +102,10 @@ namespace Player {
 	 * Renders EasyRPG Player state to the screen
 	 */
 	void Draw();
+#ifdef __3DS__
+	/** Returns the most recent measured main-loop frame timings in milliseconds. */
+	void GetPerformanceFrameTimes(double& frame_ms, double& update_ms, double& draw_ms);
+#endif
 
 	/**
 	 * Returns executed game frames since player start.

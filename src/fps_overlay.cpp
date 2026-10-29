@@ -16,6 +16,9 @@
  */
 
 #include <sstream>
+#ifdef __3DS__
+#include <3ds.h>
+#endif
 
 #include "fps_overlay.h"
 #include "game_clock.h"
@@ -25,6 +28,9 @@
 #include "input.h"
 #include "font.h"
 #include "drawable_mgr.h"
+#ifdef __3DS__
+#include "player.h"
+#endif
 
 using namespace std::chrono_literals;
 
@@ -47,6 +53,19 @@ void FpsOverlay::UpdateText() {
 	}
 
 	fps_dirty = true;
+#ifdef __3DS__
+	if (draw_performance_monitor) {
+		const double app_used_mb = osGetMemRegionUsed(MEMREGION_APPLICATION) / (1024.0 * 1024.0);
+		const double app_total_mb = osGetMemRegionSize(MEMREGION_APPLICATION) / (1024.0 * 1024.0);
+		double frame_ms = 0.0;
+		double update_ms = 0.0;
+		double draw_ms = 0.0;
+		Player::GetPerformanceFrameTimes(frame_ms, update_ms, draw_ms);
+		performance_text = fmt::format("RAM {:.0f}/{:.0f}MB | F {:.0f}ms U {:.0f} D {:.0f}ms",
+			app_used_mb, app_total_mb, frame_ms, update_ms, draw_ms);
+		performance_dirty = true;
+	}
+#endif
 }
 
 bool FpsOverlay::Update() {
@@ -89,6 +108,23 @@ void FpsOverlay::Draw(Bitmap& dst) {
 
 		dst.Blit(1, 2, *fps_bitmap, fps_rect, 255);
 	}
+#ifdef __3DS__
+	if (draw_performance_monitor) {
+		if (performance_dirty) {
+			Rect rect = Text::GetSize(*Font::DefaultBitmapFont(), performance_text);
+			if (!performance_bitmap || performance_bitmap->GetWidth() < rect.width + 2 || performance_bitmap->GetHeight() < rect.height) {
+				performance_bitmap = Bitmap::Create(rect.width + 2, rect.height, true);
+			}
+			performance_bitmap->Clear();
+			performance_bitmap->Fill(Color(0, 0, 0, 160));
+			Text::Draw(*performance_bitmap, 1, 0, *Font::DefaultBitmapFont(), Color(255, 255, 255, 255), performance_text);
+			performance_rect = Rect(0, 0, rect.width + 2, rect.height);
+			performance_dirty = false;
+		}
+		const int y = draw_fps ? 2 + fps_rect.height + 2 : 2;
+		dst.Blit(1, y, *performance_bitmap, performance_rect, 255);
+	}
+#endif
 
 	// Always drawn when speedup is on independent of FPS
 	if (last_speed_mod > 1) {

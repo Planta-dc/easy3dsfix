@@ -55,12 +55,22 @@ public:
 	 * @param value true if we want to draw to screen
 	 */
 	void SetDrawFps(bool value);
+#ifdef __3DS__
+	void SetPerformanceMonitor(bool value);
+#endif
 
 private:
 	void UpdateText();
 
 	BitmapRef fps_bitmap;
 	BitmapRef speedup_bitmap;
+#ifdef __3DS__
+	BitmapRef performance_bitmap;
+	Rect performance_rect;
+	std::string performance_text;
+	bool draw_performance_monitor = false;
+	bool performance_dirty = true;
+#endif
 	Game_Clock::time_point last_refresh_time;
 
 	/** Rect to draw on screen */
@@ -82,5 +92,17 @@ inline std::string FpsOverlay::GetFpsString() const {
 inline void FpsOverlay::SetDrawFps(bool value) {
 	draw_fps = value;
 }
+
+#ifdef __3DS__
+inline void FpsOverlay::SetPerformanceMonitor(bool value) {
+	if (draw_performance_monitor != value) {
+		draw_performance_monitor = value;
+		performance_dirty = true;
+		if (value) {
+			UpdateText();
+		}
+	}
+}
+#endif
 
 #endif
