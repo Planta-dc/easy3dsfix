@@ -51,6 +51,7 @@ namespace {
 	bool released_touch = true;
 	enum class screen_state { off, keep, touched, refresh };
 	screen_state bottom_state = screen_state::refresh;
+	bool bottom_screen_off_before_suspend = false;
 	// texture data
 	u32* screen_buffer = nullptr;
 	BitmapRef screen_surface; // contains screen_buffer, linear heap allocated
@@ -87,10 +88,19 @@ static void _aptHook(APT_HookType hook, void*) {
 	switch (hook) {
 		case APTHOOK_ONSUSPEND:
 			Output::Debug("app is going to suspend.");
+			bottom_screen_off_before_suspend = bottom_state == screen_state::off;
+			if (bottom_screen_off_before_suspend) {
+				// Keep the HOME Menu's bottom screen lit while this app is suspended.
+				CtrUi::ToggleBottomScreen(true);
+			}
 			Player::Pause();
 			break;
 		case APTHOOK_ONRESTORE:
 			Output::Debug("app has been restored.");
+			if (bottom_screen_off_before_suspend) {
+				CtrUi::ToggleBottomScreen(false);
+				bottom_screen_off_before_suspend = false;
+			}
 			Player::Resume();
 			break;
 		case APTHOOK_ONSLEEP:
