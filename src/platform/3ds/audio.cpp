@@ -27,10 +27,9 @@
 #include "audio_secache.h"
 #include "audio_decoder_base.h"
 
-//#define EP_DEBUG_CTRAUDIO
+Game_Clock::time_point dsp_tick;
 #ifdef EP_DEBUG_CTRAUDIO
 using namespace std::chrono_literals;
-Game_Clock::time_point dsp_tick;
 #define DebugLog Output::Debug
 #else
 #define DebugLog(...)
@@ -312,10 +311,20 @@ void CtrAudio::SE_Stop() {
 }
 
 void CtrAudio::Update() {
+	auto t = Game_Clock::now();
+	auto s = std::chrono::duration_cast<std::chrono::seconds>(t - dsp_tick);
+	if (dsp_inited && s >= std::chrono::seconds(5)) {
+		dsp_tick = t;
+		u32 all = ndspGetFrameCount();
+		u32 dropped = ndspGetDroppedFrames();
+		if (dropped > 0 && all > 0) {
+			Output::Debug("3DS audio: DSP dropped frames total={} of {} ({:.2f}%)", dropped, all, (100.0 * dropped) / all);
+		}
+	}
+
 	if (!bgm.decoder)
 		return;
 
-	auto t = Game_Clock::now();
 	auto us = std::chrono::duration_cast<std::chrono::microseconds>(t - bgm.starttick);
 	bgm.decoder->Update(us);
 	bgm.starttick = t;
@@ -328,19 +337,6 @@ void n3ds_dsp_callback(void* userdata) {
 		bgm.buf[fill_block].status = NDSP_WBUF_FREE;
 		LightEvent_Signal(&audio_event);
 	}
-
-#ifdef EP_DEBUG_CTRAUDIO
-	auto t = Game_Clock::now();
-	auto s = std::chrono::duration_cast<std::chrono::seconds>(t - dsp_tick);
-	if (s > 5s) {
-		dsp_tick = t;
-		u32 all = ndspGetFrameCount();
-		u32 dropped = ndspGetDroppedFrames();
-		float percent = (float)dropped/all*100;
-		if (percent > 0.0f)
-			Output::Debug("DSP frames dropped: {}% ({} of {})", percent, dropped, all);
-	}
-#endif
 }
 
 void n3ds_audio_thread(void* userdata) {
@@ -409,9 +405,7 @@ CtrAudio::CtrAudio(const Game_ConfigAudio& cfg) : AudioInterface(cfg) {
 	if(!audio_thread)
 		Output::Warning("Couldn't create bgm thread!");
 
-#ifdef EP_DEBUG_CTRAUDIO
 	dsp_tick = Game_Clock::now();
-#endif
 }
 
 CtrAudio::~CtrAudio() {

@@ -33,6 +33,9 @@
 #include <lcf/reader_util.h>
 #include "scene_save.h"
 #include "scene_map.h"
+#ifdef __3DS__
+#include "scene.h"
+#endif
 #include "utils.h"
 #include "audio_secache.h"
 #include "feature.h"
@@ -72,6 +75,13 @@ bool Game_System::IsStopSoundFilename(std::string_view name, Filesystem_Stream::
 void Game_System::BgmPlay(lcf::rpg::Music const& bgm) {
 	lcf::rpg::Music previous_music = data.current_music;
 	data.current_music = bgm;
+#ifdef __3DS__
+	if (previous_music.name != bgm.name || bgm.name.empty() || bgm.name == "(OFF)") {
+		const char* scene_name = Scene::instance && Scene::instance->type < Scene::SceneMax
+			? Scene::scene_names[Scene::instance->type] : "None";
+		Output::Debug("BGM request: scene={}, track='{}'", scene_name, bgm.name.empty() ? "(OFF)" : bgm.name);
+	}
+#endif
 
 	// Validate
 	if (bgm.volume < 0 || bgm.volume > 100) {
@@ -567,11 +577,17 @@ void Game_System::OnBgmReady(FileRequestResult* result) {
 	}
 
 	Audio().BGM_Play(std::move(stream), data.current_music.volume, data.current_music.tempo, data.current_music.fadein, data.current_music.balance);
+#ifdef __3DS__
+	Output::Debug("BGM started: requested='{}', file='{}', decoder='{}'", data.current_music.name, result->file, Audio().BGM_GetType());
+#endif
 }
 
 void Game_System::OnBgmInelukiReady(FileRequestResult* result) {
 	bgm_pending = false;
 	Audio().BGM_Play(FileFinder::Game().OpenFile(result->file), data.current_music.volume, data.current_music.tempo, data.current_music.fadein, data.current_music.balance);
+#ifdef __3DS__
+	Output::Debug("BGM started: requested='{}', file='{}', decoder='{}'", data.current_music.name, result->file, Audio().BGM_GetType());
+#endif
 }
 
 void Game_System::OnSeReady(FileRequestResult* result, lcf::rpg::Sound se, bool stop_sounds) {

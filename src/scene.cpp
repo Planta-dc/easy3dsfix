@@ -161,6 +161,9 @@ void Scene::MainFunction() {
 		if (!init) {
 			auto prev_scene = Graphics::UpdateSceneCallback();
 			auto prev_scene_type = prev_scene ? prev_scene->type : Null;
+#ifdef __3DS__
+			Output::Debug("Scene change: {} -> {}", scene_names[prev_scene_type], scene_names[type]);
+#endif
 
 			// Destroy the previous scene here, before any initialization logic / transition in occurs.
 			prev_scene.reset();
