@@ -37,16 +37,22 @@ jobs:
 
       - name: Install build tools
         run: |
-          export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
+          set -euxo pipefail
+          export PATH="$DEVKITPRO/portlibs/3ds/bin:$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
+          echo "$DEVKITPRO/portlibs/3ds/bin" >> "$GITHUB_PATH"
+          echo "$DEVKITARM/bin" >> "$GITHUB_PATH"
+          echo "$DEVKITPRO/tools/bin" >> "$GITHUB_PATH"
+
           apt-get update -q
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
             autoconf automake bash bison build-essential ca-certificates cmake curl \
             flex gettext git gperf libtool libtool-bin make meson ninja-build patch perl \
             pkg-config python3 tar texinfo unzip wget xz-utils
           rm -rf /var/lib/apt/lists/*
+
           test -x "$DEVKITARM/bin/arm-none-eabi-g++"
           test -f "$DEVKITPRO/cmake/3DS.cmake"
-          command -v arm-none-eabi-pkg-config
+          test -x "$DEVKITPRO/portlibs/3ds/bin/arm-none-eabi-pkg-config"
           command -v tex3ds
           command -v 3dsxtool
 
@@ -78,8 +84,9 @@ jobs:
         run: |
           set -o pipefail
           prefix="$GITHUB_WORKSPACE/buildscripts/3ds"
-          export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
+          export PATH="$DEVKITPRO/portlibs/3ds/bin:$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
           export PKG_CONFIG_LIBDIR="$prefix/lib/pkgconfig:$DEVKITPRO/portlibs/3ds/lib/pkgconfig:$DEVKITPRO/portlibs/armv6k/lib/pkgconfig"
+
           cmake -S . -B build-3ds -G Ninja \
             -DCMAKE_TOOLCHAIN_FILE="$DEVKITPRO/cmake/3DS.cmake" \
             -DCMAKE_BUILD_TYPE=Release \
@@ -98,7 +105,7 @@ jobs:
         run: |
           cmake --install build-3ds --prefix "$GITHUB_WORKSPACE/artifacts" --component 3ds
           test -s artifacts/easyrpg-player/easyrpg-player.3dsx
-          find artifacts -type f -maxdepth 3 -print
+          find artifacts -maxdepth 3 -type f -print
 
       - name: Upload 3DSX artifact
         uses: actions/upload-artifact@v4
