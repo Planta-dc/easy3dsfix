@@ -1,8 +1,6 @@
 name: Stable Compilation
 
 on:
-  push:
-  pull_request:
   workflow_dispatch:
     inputs:
       git-ref:
