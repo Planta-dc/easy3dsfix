@@ -79,6 +79,9 @@ void Game_ConfigVideo::Hide() {
 	fullscreen.SetOptionVisible(false);
 	fps_limit.SetOptionVisible(false);
 	performance_mode.SetOptionVisible(false);
+	battle_animation_frames.SetOptionVisible(false);
+	flash_tone_effects.SetOptionVisible(false);
+	weather_effects.SetOptionVisible(false);
 	window_zoom.SetOptionVisible(false);
 	scaling_mode.SetOptionVisible(false);
 	stretch.SetOptionVisible(false);
@@ -595,6 +598,9 @@ void Game_Config::LoadFromStream(Filesystem_Stream::InputStream& is) {
 	video.fps.FromIni(ini);
 	video.fps_limit.FromIni(ini);
 	video.performance_mode.FromIni(ini);
+	video.battle_animation_frames.FromIni(ini);
+	video.flash_tone_effects.FromIni(ini);
+	video.weather_effects.FromIni(ini);
 	video.window_zoom.FromIni(ini);
 	video.scaling_mode.FromIni(ini);
 	video.stretch.FromIni(ini);
@@ -695,6 +701,9 @@ void Game_Config::WriteToStream(Filesystem_Stream::OutputStream& os) const {
 	video.fps.ToIni(os);
 	video.fps_limit.ToIni(os);
 	video.performance_mode.ToIni(os);
+	video.battle_animation_frames.ToIni(os);
+	video.flash_tone_effects.ToIni(os);
+	video.weather_effects.ToIni(os);
 	video.window_zoom.ToIni(os);
 	video.scaling_mode.ToIni(os);
 	video.stretch.ToIni(os);

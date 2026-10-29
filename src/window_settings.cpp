@@ -282,6 +282,15 @@ void Window_Settings::RefreshVideo() {
 	AddOption(cfg.performance_mode, [this](){
 		DisplayUi->SetPerformanceMode(!DisplayUi->GetConfig().performance_mode.Get());
 	});
+	AddOption(cfg.battle_animation_frames, [this]() {
+		DisplayUi->SetBattleAnimationFrames(static_cast<ConfigEnum::BattleAnimationFrames>(GetCurrentOption().current_value));
+	});
+	AddOption(cfg.flash_tone_effects, [this]() {
+		DisplayUi->SetFlashToneEffectsEnabled(!DisplayUi->GetConfig().flash_tone_effects.Get());
+	});
+	AddOption(cfg.weather_effects, [this]() {
+		DisplayUi->SetWeatherEffects(static_cast<ConfigEnum::WeatherEffects>(GetCurrentOption().current_value));
+	});
 	AddOption(cfg.stretch, []() { DisplayUi->ToggleStretch(); });
 	AddOption(cfg.scaling_mode, [this](){ DisplayUi->SetScalingMode(static_cast<ConfigEnum::ScalingMode>(GetCurrentOption().current_value)); });
 	AddOption(cfg.pause_when_focus_lost, [cfg]() mutable { DisplayUi->SetPauseWhenFocusLost(cfg.pause_when_focus_lost.Toggle()); });

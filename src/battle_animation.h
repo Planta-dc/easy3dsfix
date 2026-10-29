@@ -23,6 +23,7 @@
 #include "game_character.h"
 #include "system.h"
 #include <lcf/rpg/animation.h>
+#include "game_config.h"
 #include "drawable.h"
 #include "sprite_battler.h"
 
@@ -101,6 +102,7 @@ protected:
 
 	FileRequestBinding request_id;
 	bool only_sound = false;
+	ConfigEnum::BattleAnimationFrames frame_render_mode = ConfigEnum::BattleAnimationFrames::All;
 	bool invert = false;
 };
 

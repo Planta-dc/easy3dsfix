@@ -74,6 +74,18 @@ namespace ConfigEnum {
 		/** Always overlay */
 		Overlay
 	};
+
+	enum class BattleAnimationFrames {
+		All,
+		Fewer,
+		None
+	};
+
+	enum class WeatherEffects {
+		All,
+		Reduced,
+		None
+	};
 };
 
 #ifdef HAVE_FLUIDLITE
@@ -128,6 +140,17 @@ struct Game_ConfigVideo {
 #else
 	BoolConfigParam performance_mode{ "Performance mode (30 FPS)", "Render every other frame to reduce 3DS graphics work; game timing remains unchanged", "Video", "PerformanceMode", false };
 #endif
+	EnumConfigParam<ConfigEnum::BattleAnimationFrames, 3> battle_animation_frames{
+		"Battle Animation Frames", "Fewer skips alternate visual frames; None hides attack-animation images. Battle timing and sound continue normally.", "Video", "BattleAnimationFrames", ConfigEnum::BattleAnimationFrames::All,
+		Utils::MakeSvArray("All", "Fewer", "None"),
+		Utils::MakeSvArray("all", "fewer", "none"),
+		Utils::MakeSvArray("Draw every attack-animation frame", "Skip alternate attack-animation frames", "Do not draw attack-animation images")};
+	BoolConfigParam flash_tone_effects{ "Flashes & Tone", "Toggle game-screen flashes, sprite flashes, and sprite color-tone effects", "Video", "FlashToneEffects", true };
+	EnumConfigParam<ConfigEnum::WeatherEffects, 3> weather_effects{
+		"Weather Effects", "Choose how much weather to draw", "Video", "WeatherEffects", ConfigEnum::WeatherEffects::All,
+		Utils::MakeSvArray("All", "Reduced", "None"),
+		Utils::MakeSvArray("all", "reduced", "none"),
+		Utils::MakeSvArray("Draw all weather particles and layers", "Draw about half the particles and one fog layer", "Do not draw weather")};
 	ConfigParam<int> window_zoom{ "Window Zoom", "Toggle the window zoom level", "Video", "WindowZoom", 2 };
 	EnumConfigParam<ConfigEnum::ScalingMode, 3> scaling_mode{ "Scaling method", "How the output is scaled", "Video", "ScalingMode", ConfigEnum::ScalingMode::Nearest,
 		Utils::MakeSvArray("Nearest", "Integer", "Bilinear"),

@@ -79,6 +79,26 @@ void BaseUi::SetPerformanceMode(bool enabled) {
 	Player::SetFrameSkip(enabled ? 50 : 100);
 }
 
+void BaseUi::SetBattleAnimationFrames(ConfigEnum::BattleAnimationFrames frames) {
+	vcfg.battle_animation_frames.Set(frames);
+}
+
+void BaseUi::SetFlashToneEffectsEnabled(bool enabled) {
+	vcfg.flash_tone_effects.Set(enabled);
+}
+
+bool BaseUi::GetFlashToneEffectsEnabled() const {
+	return vcfg.flash_tone_effects.Get();
+}
+
+void BaseUi::SetWeatherEffects(ConfigEnum::WeatherEffects effects) {
+	vcfg.weather_effects.Set(effects);
+}
+
+ConfigEnum::WeatherEffects BaseUi::GetWeatherEffects() const {
+	return vcfg.weather_effects.Get();
+}
+
 Game_ConfigVideo BaseUi::GetConfig() const {
 	Game_ConfigVideo cfg = vcfg;
 

@@ -19,6 +19,7 @@
 #include <string>
 #include "sprite.h"
 #include "player.h"
+#include "baseui.h"
 #include "util_macro.h"
 #include "bitmap.h"
 #include "cache.h"
@@ -90,9 +91,18 @@ BitmapRef Sprite::RefreshBitmap(bool check_oob) {
 
 	src_rect_effect.Adjust(bitmap->GetWidth(), bitmap->GetHeight());
 
-	bool no_effects = !IsSpriteEffectActive();
-	bool effects_changed = tone_effect != current_tone ||
-		flash_effect != current_flash ||
+	Tone draw_tone = tone_effect;
+	Color draw_flash = flash_effect;
+#if defined(__3DS__)
+	if (DisplayUi && !DisplayUi->GetFlashToneEffectsEnabled()) {
+		draw_tone = Tone();
+		draw_flash = Color();
+	}
+#endif
+
+	bool no_effects = draw_tone == Tone() && draw_flash.alpha == 0 && !flipx_effect && !flipy_effect;
+	bool effects_changed = draw_tone != current_tone ||
+		draw_flash != current_flash ||
 		flipx_effect != current_flip_x ||
 		flipy_effect != current_flip_y ||
 		dirty;
@@ -107,12 +117,12 @@ BitmapRef Sprite::RefreshBitmap(bool check_oob) {
 	} else if (bitmap_effects) {
 		return bitmap_effects;
 	} else {
-		current_tone = tone_effect;
-		current_flash = flash_effect;
+		current_tone = draw_tone;
+		current_flash = draw_flash;
 		current_flip_x = flipx_effect;
 		current_flip_y = flipy_effect;
 
-		bitmap_effects = Cache::SpriteEffect(bitmap, src_rect_effect, flipx_effect, flipy_effect, tone_effect, flash_effect, dirty);
+		bitmap_effects = Cache::SpriteEffect(bitmap, src_rect_effect, flipx_effect, flipy_effect, draw_tone, draw_flash, dirty);
 		bitmap_effects_src_rect = src_rect_effect;
 
 		dirty = false;
