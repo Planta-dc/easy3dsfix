@@ -15,9 +15,12 @@
  * along with EasyRPG Player. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <sstream>
 #ifdef __3DS__
+#include <malloc.h>
 #include <3ds.h>
+#include <3ds/allocator/linear.h>
 #endif
 
 #include "fps_overlay.h"
@@ -55,14 +58,16 @@ void FpsOverlay::UpdateText() {
 	fps_dirty = true;
 #ifdef __3DS__
 	if (draw_performance_monitor) {
-		const double app_used_mb = osGetMemRegionUsed(MEMREGION_APPLICATION) / (1024.0 * 1024.0);
-		const double app_total_mb = osGetMemRegionSize(MEMREGION_APPLICATION) / (1024.0 * 1024.0);
+		const auto heap = mallinfo();
+		const double heap_free_mb = heap.fordblks / (1024.0 * 1024.0);
+		const double linear_free_mb = linearSpaceFree() / (1024.0 * 1024.0);
 		double frame_ms = 0.0;
 		double update_ms = 0.0;
 		double draw_ms = 0.0;
 		Player::GetPerformanceFrameTimes(frame_ms, update_ms, draw_ms);
-		performance_text = fmt::format("RAM {:.0f}/{:.0f}MB | F {:.0f}ms U {:.0f} D {:.0f}ms",
-			app_used_mb, app_total_mb, frame_ms, update_ms, draw_ms);
+		performance_line1 = fmt::format("Heap free: {:.1f} MB | Linear free: {:.1f} MB", heap_free_mb, linear_free_mb);
+		performance_line2 = fmt::format("Frame {:.0f}ms | Update {:.0f}ms | Render {:.0f}ms",
+			frame_ms, update_ms, draw_ms);
 		performance_dirty = true;
 	}
 #endif
@@ -111,14 +116,19 @@ void FpsOverlay::Draw(Bitmap& dst) {
 #ifdef __3DS__
 	if (draw_performance_monitor) {
 		if (performance_dirty) {
-			Rect rect = Text::GetSize(*Font::DefaultBitmapFont(), performance_text);
-			if (!performance_bitmap || performance_bitmap->GetWidth() < rect.width + 2 || performance_bitmap->GetHeight() < rect.height) {
-				performance_bitmap = Bitmap::Create(rect.width + 2, rect.height, true);
+			const auto& font = *Font::DefaultBitmapFont();
+			const Rect first_line = Text::GetSize(font, performance_line1);
+			const Rect second_line = Text::GetSize(font, performance_line2);
+			const int width = std::max(first_line.width, second_line.width) + 2;
+			const int height = first_line.height + second_line.height + 2;
+			if (!performance_bitmap || performance_bitmap->GetWidth() < width || performance_bitmap->GetHeight() < height) {
+				performance_bitmap = Bitmap::Create(width, height, true);
 			}
 			performance_bitmap->Clear();
 			performance_bitmap->Fill(Color(0, 0, 0, 160));
-			Text::Draw(*performance_bitmap, 1, 0, *Font::DefaultBitmapFont(), Color(255, 255, 255, 255), performance_text);
-			performance_rect = Rect(0, 0, rect.width + 2, rect.height);
+			Text::Draw(*performance_bitmap, 1, 0, font, Color(255, 255, 255, 255), performance_line1);
+			Text::Draw(*performance_bitmap, 1, first_line.height + 1, font, Color(255, 255, 255, 255), performance_line2);
+			performance_rect = Rect(0, 0, width, height);
 			performance_dirty = false;
 		}
 		const int y = draw_fps ? 2 + fps_rect.height + 2 : 2;
