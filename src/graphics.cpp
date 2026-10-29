@@ -64,6 +64,9 @@ void Graphics::Quit() {
 
 void Graphics::Update() {
 	fps_overlay->SetDrawFps(DisplayUi->RenderFps());
+#ifdef __3DS__
+	fps_overlay->SetPerformanceMonitor(DisplayUi->GetPerformanceMonitor());
+#endif
 
 	//Update Graphics:
 	if (fps_overlay->Update()) {

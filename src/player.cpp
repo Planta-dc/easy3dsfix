@@ -18,6 +18,7 @@
 // Headers
 #include "game_constants.h"
 #include <algorithm>
+#include <chrono>
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
@@ -138,6 +139,11 @@ namespace Player {
 
 	int frame_draw_accumulator = 0;
 	int frame_draw_percentage = 100;
+#ifdef __3DS__
+	double performance_frame_ms = 0.0;
+	double performance_update_ms = 0.0;
+	double performance_draw_ms = 0.0;
+#endif
 
 #ifdef __EMSCRIPTEN__
 	std::string emscripten_game_name;
@@ -232,6 +238,21 @@ void Player::Run() {
 }
 
 void Player::MainLoop() {
+#ifdef __3DS__
+	using PerfClock = std::chrono::steady_clock;
+	const auto perf_frame_start = PerfClock::now();
+	const auto perf_scene_type = Scene::instance ? Scene::instance->type : Scene::Null;
+	const bool perf_transition_active = Transition::instance().IsActive();
+	static auto perf_report_start = perf_frame_start;
+	static int perf_slow_frames = 0;
+	static double perf_worst_frame_ms = 0.0;
+	static double perf_worst_update_ms = 0.0;
+	static double perf_worst_draw_ms = 0.0;
+	static std::string perf_worst_scene = "Unknown";
+	static std::string perf_worst_music = "(unknown)";
+	static std::string perf_worst_music_type;
+	static bool perf_worst_transition = false;
+#endif
 	Instrumentation::FrameScope iframe;
 
 	const auto frame_time = Game_Clock::now();
@@ -269,7 +290,42 @@ void Player::MainLoop() {
 		Input::UpdateSystem();
 	}
 
+#ifdef __3DS__
+	const auto perf_update_end = PerfClock::now();
+#endif
 	Player::Draw();
+#ifdef __3DS__
+	const auto perf_frame_end = PerfClock::now();
+	const double perf_frame_ms = std::chrono::duration<double, std::milli>(perf_frame_end - perf_frame_start).count();
+	performance_frame_ms = perf_frame_ms;
+	performance_update_ms = std::chrono::duration<double, std::milli>(perf_update_end - perf_frame_start).count();
+	performance_draw_ms = std::chrono::duration<double, std::milli>(perf_frame_end - perf_update_end).count();
+	if (perf_frame_ms >= 50.0) {
+		++perf_slow_frames;
+		if (perf_frame_ms > perf_worst_frame_ms) {
+			perf_worst_frame_ms = perf_frame_ms;
+			perf_worst_update_ms = std::chrono::duration<double, std::milli>(perf_update_end - perf_frame_start).count();
+			perf_worst_draw_ms = std::chrono::duration<double, std::milli>(perf_frame_end - perf_update_end).count();
+			perf_worst_scene = perf_scene_type < Scene::SceneMax
+				? Scene::scene_names[perf_scene_type] : "None";
+			perf_worst_music = Main_Data::game_system ? Main_Data::game_system->GetCurrentBGM().name : "(unavailable)";
+			perf_worst_music_type = Audio().BGM_GetType();
+			perf_worst_transition = perf_transition_active;
+		}
+	}
+	if (perf_frame_end - perf_report_start >= std::chrono::seconds(5)) {
+		if (perf_slow_frames > 0) {
+			Output::Debug("3DS performance: {} frames >= 50 ms in 5 s; worst {:.1f} ms (update {:.1f} ms, draw/display {:.1f} ms), scene={}, transition={}, music='{}' ({})",
+				perf_slow_frames, perf_worst_frame_ms, perf_worst_update_ms, perf_worst_draw_ms,
+				perf_worst_scene, perf_worst_transition ? "yes" : "no", perf_worst_music, perf_worst_music_type);
+		}
+		perf_report_start = perf_frame_end;
+		perf_slow_frames = 0;
+		perf_worst_frame_ms = 0.0;
+		perf_worst_update_ms = 0.0;
+		perf_worst_draw_ms = 0.0;
+	}
+#endif
 
 	Scene::old_instances.clear();
 
@@ -425,6 +481,14 @@ void Player::IncFrame() {
 		Main_Data::game_system->IncFrameCounter();
 	}
 }
+
+#ifdef __3DS__
+void Player::GetPerformanceFrameTimes(double& frame_ms, double& update_ms, double& draw_ms) {
+	frame_ms = performance_frame_ms;
+	update_ms = performance_update_ms;
+	draw_ms = performance_draw_ms;
+}
+#endif
 
 int Player::GetFrames() {
 	return frames;

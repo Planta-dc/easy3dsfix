@@ -55,6 +55,7 @@ public:
 	void ToggleTouchUi() override;
 	void vGetConfig(Game_ConfigVideo& cfg) const override;
 	bool HandleErrorOutput(const std::string &message) override;
+	static void ToggleBottomScreen(bool state);
 
 #ifdef SUPPORT_AUDIO
 	AudioInterface& GetAudio();
@@ -63,7 +64,6 @@ public:
 
 private:
 	C3D_RenderTarget *top_screen, *bottom_screen;
-	void ToggleBottomScreen(bool state);
 
 #ifdef SUPPORT_AUDIO
 	std::unique_ptr<AudioInterface> audio_;

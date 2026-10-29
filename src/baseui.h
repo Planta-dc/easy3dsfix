@@ -226,6 +226,11 @@ public:
 
 	/** Enable or disable the reduced-render-rate performance mode. */
 	void SetPerformanceMode(bool enabled);
+#ifdef __3DS__
+	/** Enable or disable the 3DS performance monitor overlay. */
+	void SetPerformanceMonitor(bool enabled);
+	bool GetPerformanceMonitor() const;
+#endif
 
 	/** Configure rendering quality reductions used by the 3DS backend. */
 	void SetBattleAnimationFrames(ConfigEnum::BattleAnimationFrames frames);

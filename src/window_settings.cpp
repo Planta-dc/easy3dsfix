@@ -282,6 +282,11 @@ void Window_Settings::RefreshVideo() {
 	AddOption(cfg.performance_mode, [this](){
 		DisplayUi->SetPerformanceMode(!DisplayUi->GetConfig().performance_mode.Get());
 	});
+#ifdef __3DS__
+	AddOption(cfg.performance_monitor, [this]() {
+		DisplayUi->SetPerformanceMonitor(!DisplayUi->GetConfig().performance_monitor.Get());
+	});
+#endif
 	AddOption(cfg.battle_animation_frames, [this]() {
 		DisplayUi->SetBattleAnimationFrames(static_cast<ConfigEnum::BattleAnimationFrames>(GetCurrentOption().current_value));
 	});

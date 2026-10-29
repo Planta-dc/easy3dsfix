@@ -73,6 +73,9 @@ std::unique_ptr<AudioDecoderBase> MidiDecoder::CreateFluidsynth(bool resample) {
 	if (works.fluidsynth && FluidSynthDecoder::Initialize(works.fluidsynth_status)) {
 		auto dec = std::make_unique<FluidSynthDecoder>();
 		mididec = std::make_unique<AudioDecoderMidi>(std::move(dec));
+#ifdef __3DS__
+		Output::Debug("MIDI backend selected: FluidSynth");
+#endif
 	}
 	else if (!mididec && works.fluidsynth) {
 		Output::Debug("Fluidsynth: {}", works.fluidsynth_status);
@@ -98,6 +101,9 @@ std::unique_ptr<AudioDecoderBase> MidiDecoder::CreateWildMidi(bool resample) {
 	if (!mididec && works.wildmidi && WildMidiDecoder::Initialize(works.wildmidi_status)) {
 		auto dec = std::make_unique<WildMidiDecoder>();
 		mididec = std::make_unique<AudioDecoderMidi>(std::move(dec));
+#ifdef __3DS__
+		Output::Debug("MIDI backend selected: WildMidi");
+#endif
 	}
 	else if (!mididec && works.wildmidi) {
 		Output::Debug("WildMidi: {}", works.wildmidi_status);
@@ -123,6 +129,9 @@ std::unique_ptr<AudioDecoderBase> MidiDecoder::CreateFmMidi(bool resample) {
 	if (!mididec) {
 		auto dec = std::make_unique<FmMidiDecoder>();
 		mididec = std::make_unique<AudioDecoderMidi>(std::move(dec));
+#ifdef __3DS__
+		Output::Debug("MIDI backend selected: built-in FmMidi");
+#endif
 	}
 #endif
 
