@@ -1,0 +1,122 @@
+name: 3DS build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-3ds:
+    name: Build EasyRPG Player for Nintendo 3DS
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    container:
+      # Pinned devkitPro image, following the toolchain pin used by 3ds-GBabe.
+      image: docker.io/devkitpro/devkitarm:20260610@sha256:116afba8df8453961de2936ffab20dd441edf4d682856c1ec8b0e53d7ed0bbf5
+      options: --user root
+    defaults:
+      run:
+        shell: bash
+    env:
+      DEVKITPRO: /opt/devkitpro
+      DEVKITARM: /opt/devkitpro/devkitARM
+
+    steps:
+      - name: Check out Player
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build tools
+        run: |
+          export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
+          apt-get update -q
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            autoconf automake bash bison build-essential ca-certificates cmake curl \
+            flex gettext git gperf libtool libtool-bin make meson ninja-build patch perl \
+            pkg-config python3 tar texinfo unzip wget xz-utils
+          rm -rf /var/lib/apt/lists/*
+          test -x "$DEVKITARM/bin/arm-none-eabi-g++"
+          test -f "$DEVKITPRO/cmake/3DS.cmake"
+          command -v arm-none-eabi-pkg-config
+          command -v tex3ds
+          command -v 3dsxtool
+
+      - name: Fetch pinned EasyRPG 3DS dependency scripts
+        id: buildscripts
+        run: |
+          git clone --no-checkout https://github.com/EasyRPG/buildscripts.git buildscripts
+          git -C buildscripts checkout --detach 84cf2f449a0d1c09f17d2bbf3d28f4f573aa718a
+          echo "sha=$(git -C buildscripts rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache 3DS dependency prefix
+        id: dependency-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            buildscripts/3ds/include
+            buildscripts/3ds/lib
+          key: 3ds-deps-devkitarm-20260610-${{ steps.buildscripts.outputs.sha }}
+
+      - name: Build EasyRPG's 3DS dependencies
+        if: steps.dependency-cache.outputs.cache-hit != 'true'
+        run: |
+          set -o pipefail
+          cd buildscripts/3ds
+          export BUILD_LIBLCF=1
+          ./0_build_everything.sh 2>&1 | tee "$GITHUB_WORKSPACE/dependencies-build.log"
+
+      - name: Configure Player
+        run: |
+          set -o pipefail
+          prefix="$GITHUB_WORKSPACE/buildscripts/3ds"
+          export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
+          export PKG_CONFIG_LIBDIR="$prefix/lib/pkgconfig:$DEVKITPRO/portlibs/3ds/lib/pkgconfig:$DEVKITPRO/portlibs/armv6k/lib/pkgconfig"
+          cmake -S . -B build-3ds -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE="$DEVKITPRO/cmake/3DS.cmake" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$prefix" \
+            -DPLAYER_TARGET_PLATFORM=3ds \
+            -DPLAYER_BUILD_LIBLCF=OFF \
+            -DPLAYER_ENABLE_TESTS=OFF \
+            -DPLAYER_BUNDLE=OFF 2>&1 | tee configure-3ds.log
+
+      - name: Compile Player
+        run: |
+          set -o pipefail
+          cmake --build build-3ds --parallel "$(nproc)" 2>&1 | tee build-3ds.log
+
+      - name: Stage the 3DSX
+        run: |
+          cmake --install build-3ds --prefix "$GITHUB_WORKSPACE/artifacts" --component 3ds
+          test -s artifacts/easyrpg-player/easyrpg-player.3dsx
+          find artifacts -type f -maxdepth 3 -print
+
+      - name: Upload 3DSX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: easyrpg-player-3dsx
+          path: artifacts/easyrpg-player/easyrpg-player.3dsx
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3ds-build-log
+          path: |
+            dependencies-build.log
+            configure-3ds.log
+            build-3ds.log
+            build-3ds/CMakeFiles/CMakeOutput.log
+          if-no-files-found: ignore
+          retention-days: 3
