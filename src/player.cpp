@@ -399,14 +399,23 @@ void Player::Update(bool update_scene) {
 }
 
 void Player::Draw() {
-	Graphics::Update();
-
 	frame_draw_accumulator += frame_draw_percentage;
-	if (frame_draw_accumulator >= 100) {
+	const bool draw_frame = frame_draw_accumulator >= 100;
+	if (draw_frame) {
 		frame_draw_accumulator -= 100;
-		Graphics::Draw(*DisplayUi->GetDisplaySurface());
 	}
 
+#if defined(__3DS__)
+	// Avoid overlay work, CPU color conversion, and the GPU transfer on skipped frames.
+	if (!draw_frame) {
+		return;
+	}
+#endif
+
+	Graphics::Update();
+	if (draw_frame) {
+		Graphics::Draw(*DisplayUi->GetDisplaySurface());
+	}
 	DisplayUi->UpdateDisplay();
 }
 
@@ -1008,7 +1017,11 @@ void Player::ResetGameObjects() {
 
 	// Reset SetGameOption global settings
 	// Differs from Maniac Patch which simply keeps them upon reset
+#if defined(__3DS__)
+	Player::SetFrameSkip(DisplayUi && DisplayUi->GetConfig().performance_mode.Get() ? 50 : 100);
+#else
 	Player::SetFrameSkip(100);
+#endif
 	Game_Clock::SetTargetGameFps(DEFAULT_FPS);
 }
 

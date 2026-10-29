@@ -123,6 +123,11 @@ struct Game_ConfigVideo {
 		Utils::MakeSvArray("off", "on", "overlay"),
 		Utils::MakeSvArray("Do not show the FPS counter", "Show the FPS counter", "Always show the FPS counter inside the window")};
 	RangeConfigParam<int> fps_limit{ "Frame Limiter", "Toggle the frames per second limit (Recommended: 60)", "Video", "FpsLimit", DEFAULT_FPS, 0, 99999 };
+#ifdef __3DS__
+	BoolConfigParam performance_mode{ "Performance mode (30 FPS)", "Render every other frame to reduce 3DS graphics work; game timing remains unchanged", "Video", "PerformanceMode", true };
+#else
+	BoolConfigParam performance_mode{ "Performance mode (30 FPS)", "Render every other frame to reduce 3DS graphics work; game timing remains unchanged", "Video", "PerformanceMode", false };
+#endif
 	ConfigParam<int> window_zoom{ "Window Zoom", "Toggle the window zoom level", "Video", "WindowZoom", 2 };
 	EnumConfigParam<ConfigEnum::ScalingMode, 3> scaling_mode{ "Scaling method", "How the output is scaled", "Video", "ScalingMode", ConfigEnum::ScalingMode::Nearest,
 		Utils::MakeSvArray("Nearest", "Integer", "Bilinear"),

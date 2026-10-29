@@ -78,6 +78,7 @@ void Game_ConfigVideo::Hide() {
 	vsync.SetOptionVisible(false);
 	fullscreen.SetOptionVisible(false);
 	fps_limit.SetOptionVisible(false);
+	performance_mode.SetOptionVisible(false);
 	window_zoom.SetOptionVisible(false);
 	scaling_mode.SetOptionVisible(false);
 	stretch.SetOptionVisible(false);
@@ -593,6 +594,7 @@ void Game_Config::LoadFromStream(Filesystem_Stream::InputStream& is) {
 	video.fullscreen.FromIni(ini);
 	video.fps.FromIni(ini);
 	video.fps_limit.FromIni(ini);
+	video.performance_mode.FromIni(ini);
 	video.window_zoom.FromIni(ini);
 	video.scaling_mode.FromIni(ini);
 	video.stretch.FromIni(ini);
@@ -692,6 +694,7 @@ void Game_Config::WriteToStream(Filesystem_Stream::OutputStream& os) const {
 	video.fullscreen.ToIni(os);
 	video.fps.ToIni(os);
 	video.fps_limit.ToIni(os);
+	video.performance_mode.ToIni(os);
 	video.window_zoom.ToIni(os);
 	video.scaling_mode.ToIni(os);
 	video.stretch.ToIni(os);

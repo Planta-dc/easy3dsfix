@@ -74,6 +74,11 @@ void BaseUi::SetGameResolution(ConfigEnum::GameResolution resolution) {
 	vcfg.game_resolution.Set(resolution);
 }
 
+void BaseUi::SetPerformanceMode(bool enabled) {
+	vcfg.performance_mode.Set(enabled);
+	Player::SetFrameSkip(enabled ? 50 : 100);
+}
+
 Game_ConfigVideo BaseUi::GetConfig() const {
 	Game_ConfigVideo cfg = vcfg;
 

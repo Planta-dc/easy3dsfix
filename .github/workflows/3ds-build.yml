@@ -2,6 +2,16 @@ name: 3DS build
 
 on:
   workflow_dispatch:
+    inputs:
+      target:
+        description: "Artifact to produce"
+        type: choice
+        options:
+          - both
+          - 3dsx
+          - cia
+        default: both
+        required: true
 
 permissions:
   contents: read
@@ -56,6 +66,10 @@ jobs:
           test -x "$DEVKITPRO/portlibs/3ds/bin/arm-none-eabi-pkg-config"
           command -v tex3ds
           command -v 3dsxtool
+
+      - name: Install CIA packaging tools
+        if: inputs.target != '3dsx'
+        run: sh .github/scripts/install-3ds-packaging-tools.sh
 
       - name: Fetch pinned EasyRPG 3DS dependency scripts
         id: buildscripts
@@ -135,11 +149,44 @@ jobs:
           test -s artifacts/easyrpg-player/easyrpg-player.3dsx
           find artifacts -maxdepth 3 -type f -print
 
+      - name: Build CIA package
+        if: inputs.target != '3dsx'
+        run: |
+          set -euo pipefail
+          mkdir -p build-3ds/cia
+          bannertool makebanner \
+            -i resources/3ds/cia_builder/assets/banner.png \
+            -a resources/3ds/cia_builder/assets/audio.wav \
+            -o build-3ds/cia/banner.bnr
+          bannertool makesmdh \
+            -s "EasyRPG Player" \
+            -l "Play RPG Maker 2000/2003 games" \
+            -p "EasyRPG Team" \
+            -i resources/3ds/icon.png \
+            -o build-3ds/cia/icon.icn
+          makerom -f cia -o artifacts/easyrpg-player.cia \
+            -target t -exefslogo \
+            -elf build-3ds/easyrpg-player.elf \
+            -rsf resources/3ds/cia_builder/app/cia_workaround.rsf \
+            -icon build-3ds/cia/icon.icn \
+            -banner build-3ds/cia/banner.bnr
+          test -s artifacts/easyrpg-player.cia
+
       - name: Upload 3DSX artifact
+        if: inputs.target != 'cia'
         uses: actions/upload-artifact@v4
         with:
           name: easyrpg-player-3dsx
           path: artifacts/easyrpg-player/easyrpg-player.3dsx
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload CIA artifact
+        if: inputs.target != '3dsx'
+        uses: actions/upload-artifact@v4
+        with:
+          name: easyrpg-player-cia
+          path: artifacts/easyrpg-player.cia
           if-no-files-found: error
           retention-days: 14
 
