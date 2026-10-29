@@ -227,6 +227,13 @@ public:
 	/** Enable or disable the reduced-render-rate performance mode. */
 	void SetPerformanceMode(bool enabled);
 
+	/** Configure rendering quality reductions used by the 3DS backend. */
+	void SetBattleAnimationFrames(ConfigEnum::BattleAnimationFrames frames);
+	void SetFlashToneEffectsEnabled(bool enabled);
+	bool GetFlashToneEffectsEnabled() const;
+	void SetWeatherEffects(ConfigEnum::WeatherEffects effects);
+	ConfigEnum::WeatherEffects GetWeatherEffects() const;
+
 	/** Sets the scaling mode of the window */
 	virtual void SetScalingMode(ConfigEnum::ScalingMode) {};
 

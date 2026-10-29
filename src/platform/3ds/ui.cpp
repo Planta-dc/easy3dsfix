@@ -453,6 +453,9 @@ void CtrUi::vGetConfig(Game_ConfigVideo& cfg) const {
 	cfg.stretch.SetOptionVisible(true);
 	cfg.touch_ui.SetOptionVisible(true);
 	cfg.performance_mode.SetOptionVisible(true);
+	cfg.battle_animation_frames.SetOptionVisible(true);
+	cfg.flash_tone_effects.SetOptionVisible(true);
+	cfg.weather_effects.SetOptionVisible(true);
 	cfg.touch_ui.SetName("Backlight");
 	cfg.touch_ui.SetDescription("Toggle the backlight of the bottom screen");
 	cfg.touch_ui.Set(bottom_state != screen_state::off);

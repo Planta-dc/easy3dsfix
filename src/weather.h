@@ -43,18 +43,18 @@ public:
 	static int GetMaxNumParticles(int weather_type);
 
 private:
-	void DrawRain(Bitmap& dst);
-	void DrawSnow(Bitmap& dst);
-	void DrawFog(Bitmap& dst);
-	void DrawSandstorm(Bitmap& dst);
+	void DrawRain(Bitmap& dst, bool reduced);
+	void DrawSnow(Bitmap& dst, bool reduced);
+	void DrawFog(Bitmap& dst, bool reduced);
+	void DrawSandstorm(Bitmap& dst, bool reduced);
 	void CreateRainParticle();
 	void CreateSnowParticle();
 	void CreateSandParticle();
 	void CreateFogOverlay();
 
-	void DrawParticles(Bitmap& dst, const Bitmap& particle, Rect rect, int abase, int tmax);
-	void DrawFogOverlay(Bitmap& dst, const Bitmap& overlay);
-	void DrawSandParticles(Bitmap& dst, const Bitmap& particle);
+	void DrawParticles(Bitmap& dst, const Bitmap& particle, Rect rect, int abase, int tmax, bool reduced);
+	void DrawFogOverlay(Bitmap& dst, const Bitmap& overlay, bool reduced);
+	void DrawSandParticles(Bitmap& dst, const Bitmap& particle, bool reduced);
 	const Bitmap* ApplyToneEffect(const Bitmap& bitmap, Rect rect);
 
 	BitmapRef snow_bitmap;

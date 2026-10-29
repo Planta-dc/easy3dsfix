@@ -37,12 +37,23 @@
 BattleAnimation::BattleAnimation(const lcf::rpg::Animation& anim, bool only_sound, int cutoff) :
 	animation(anim), only_sound(only_sound)
 {
+#if defined(__3DS__)
+	// Read once per animation; animation timing and sound remain unchanged.
+	if (Game_Battle::IsBattleRunning() && DisplayUi) {
+		frame_render_mode = DisplayUi->GetConfig().battle_animation_frames.Get();
+	}
+#endif
+
 	num_frames = GetRealFrames() * 2;
 	if (cutoff >= 0 && cutoff < num_frames) {
 		num_frames = cutoff;
 	}
 
 	SetZ(Priority_BattleAnimation);
+
+	if (frame_render_mode == ConfigEnum::BattleAnimationFrames::None && Game_Battle::IsBattleRunning()) {
+		return;
+	}
 
 	std::string_view name = animation.animation_name;
 	BitmapRef graphic;
@@ -94,6 +105,13 @@ void BattleAnimation::OnBattle2SpriteReady(FileRequestResult* result) {
 
 void BattleAnimation::DrawAt(Bitmap& dst, int x, int y) {
 	if (IsDone()) {
+		return;
+	}
+
+	if (frame_render_mode == ConfigEnum::BattleAnimationFrames::None) {
+		return;
+	}
+	if (frame_render_mode == ConfigEnum::BattleAnimationFrames::Fewer && (GetRealFrame() & 1) != 0) {
 		return;
 	}
 

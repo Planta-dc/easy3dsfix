@@ -20,6 +20,7 @@
 #include "bitmap.h"
 #include "color.h"
 #include "game_screen.h"
+#include "baseui.h"
 #include "main_data.h"
 #include "screen.h"
 #include "drawable_mgr.h"
@@ -31,6 +32,11 @@ Screen::Screen() : Drawable(Priority_Screen)
 
 void Screen::Draw(Bitmap& dst) {
 	auto flash_color = Main_Data::game_screen->GetFlashColor();
+#if defined(__3DS__)
+	if (DisplayUi && !DisplayUi->GetFlashToneEffectsEnabled()) {
+		flash_color = Color();
+	}
+#endif
 	if (flash_color.alpha > 0) {
 		if (!flash) {
 			flash = Bitmap::Create(dst.GetWidth(), dst.GetHeight(), flash_color);

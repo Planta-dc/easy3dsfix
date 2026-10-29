@@ -26,6 +26,7 @@
 #include "weather.h"
 #include "drawable_mgr.h"
 #include "player.h"
+#include "baseui.h"
 #include "output.h"
 #include "rand.h"
 
@@ -42,22 +43,33 @@ void Weather::Update() {
 }
 
 void Weather::Draw(Bitmap& dst) {
+	auto weather_mode = ConfigEnum::WeatherEffects::All;
+#if defined(__3DS__)
+	if (DisplayUi) {
+		weather_mode = DisplayUi->GetWeatherEffects();
+	}
+#endif
+	if (weather_mode == ConfigEnum::WeatherEffects::None) {
+		return;
+	}
+
 	SetTone(Main_Data::game_screen->GetTone());
+	const bool reduced = weather_mode == ConfigEnum::WeatherEffects::Reduced;
 
 	switch (Main_Data::game_screen->GetWeatherType()) {
 		case Game_Screen::Weather_None:
 			break;
 		case Game_Screen::Weather_Rain:
-			DrawRain(dst);
+			DrawRain(dst, reduced);
 			break;
 		case Game_Screen::Weather_Snow:
-			DrawSnow(dst);
+			DrawSnow(dst, reduced);
 			break;
 		case Game_Screen::Weather_Fog:
-			DrawFog(dst);
+			DrawFog(dst, reduced);
 			break;
 		case Game_Screen::Weather_Sandstorm:
-			DrawSandstorm(dst);
+			DrawSandstorm(dst, reduced);
 			break;
 	}
 }
@@ -135,6 +147,11 @@ int Weather::GetMaxNumParticles(int weather_type) {
 }
 
 const Bitmap* Weather::ApplyToneEffect(const Bitmap& bitmap, Rect rect) {
+#if defined(__3DS__)
+	if (DisplayUi && !DisplayUi->GetFlashToneEffectsEnabled()) {
+		return &bitmap;
+	}
+#endif
 	if (tone_effect == Tone()) {
 		return &bitmap;
 	}
@@ -166,11 +183,11 @@ void Weather::CreateRainParticle() {
 	}
 }
 
-void Weather::DrawRain(Bitmap& dst) {
+void Weather::DrawRain(Bitmap& dst, bool reduced) {
 	if (!rain_bitmap) {
 		CreateRainParticle();
 	}
-	DrawParticles(dst, *rain_bitmap, rain_bitmap_rect, 5, 12);
+	DrawParticles(dst, *rain_bitmap, rain_bitmap_rect, 5, 12, reduced);
 }
 
 
@@ -188,20 +205,23 @@ void Weather::CreateSnowParticle() {
 	}
 }
 
-void Weather::DrawSnow(Bitmap& dst) {
+void Weather::DrawSnow(Bitmap& dst, bool reduced) {
 	if (!snow_bitmap) {
 		CreateSnowParticle();
 	}
-	DrawParticles(dst, *snow_bitmap, snow_bitmap_rect, 7, 30);
+	DrawParticles(dst, *snow_bitmap, snow_bitmap_rect, 7, 30, reduced);
 }
 
-void Weather::DrawParticles(Bitmap& dst, const Bitmap& particle, const Rect rect, int abase, int tmax) {
+void Weather::DrawParticles(Bitmap& dst, const Bitmap& particle, const Rect rect, int abase, int tmax, bool reduced) {
 	auto* bitmap = ApplyToneEffect(particle, rect);
 
 	const auto strength = Main_Data::game_screen->GetWeatherStrength();
 	const auto& particles = Main_Data::game_screen->GetParticles();
 
-	const int num_particles = num_rain_or_snow_particles[Utils::Clamp(strength, 0, num_strength - 1)];
+	int num_particles = num_rain_or_snow_particles[Utils::Clamp(strength, 0, num_strength - 1)];
+	if (reduced) {
+		num_particles = (num_particles + 1) / 2;
+	}
 	const auto ainc = abase + strength;
 
 	auto surface_rect = weather_surface->GetRect();
@@ -226,15 +246,15 @@ void Weather::DrawParticles(Bitmap& dst, const Bitmap& particle, const Rect rect
 	dst.TiledBlit(-pan_rect.x + shake_x, -pan_rect.y + shake_y, surface_rect, *weather_surface, dst.GetRect(), Opacity::Opaque());
 }
 
-void Weather::DrawFog(Bitmap& dst) {
+void Weather::DrawFog(Bitmap& dst, bool reduced) {
 	if (!fog_bitmap) {
 		CreateFogOverlay();
 	}
 
-	DrawFogOverlay(dst, *fog_bitmap);
+	DrawFogOverlay(dst, *fog_bitmap, reduced);
 }
 
-void Weather::DrawSandstorm(Bitmap& dst) {
+void Weather::DrawSandstorm(Bitmap& dst, bool reduced) {
 	if (!sand_bitmap) {
 		CreateFogOverlay();
 	}
@@ -242,8 +262,8 @@ void Weather::DrawSandstorm(Bitmap& dst) {
 		CreateSandParticle();
 	}
 
-	DrawFogOverlay(dst, *sand_bitmap);
-	DrawSandParticles(dst, *sand_particle_bitmap);
+	DrawFogOverlay(dst, *sand_bitmap, reduced);
+	DrawSandParticles(dst, *sand_particle_bitmap, reduced);
 }
 
 void Weather::CreateSandParticle() {
@@ -266,13 +286,16 @@ void Weather::CreateSandParticle() {
 	}
 }
 
-void Weather::DrawSandParticles(Bitmap& dst, const Bitmap& particle_bitmap) {
+void Weather::DrawSandParticles(Bitmap& dst, const Bitmap& particle_bitmap, bool reduced) {
 	const auto strength = Main_Data::game_screen->GetWeatherStrength();
 	const auto& particles = Main_Data::game_screen->GetParticles();
 
 	auto* bitmap = ApplyToneEffect(particle_bitmap, particle_bitmap.GetRect());
 
-	const int num_particles = num_sand_particles[Utils::Clamp(strength, 0, num_strength - 1)];
+	int num_particles = num_sand_particles[Utils::Clamp(strength, 0, num_strength - 1)];
+	if (reduced) {
+		num_particles = (num_particles + 1) / 2;
+	}
 
 	assert(num_particles <= static_cast<int>(particles.size()));
 
@@ -319,7 +342,7 @@ void Weather::CreateFogOverlay() {
 	}
 }
 
-void Weather::DrawFogOverlay(Bitmap& dst, const Bitmap& overlay) {
+void Weather::DrawFogOverlay(Bitmap& dst, const Bitmap& overlay, bool reduced) {
 	const auto dr = dst.GetRect();
 	constexpr auto sr = overlay_bitmap_rect;
 
@@ -348,7 +371,9 @@ void Weather::DrawFogOverlay(Bitmap& dst, const Bitmap& overlay) {
 	// Back layer never moves vertically
 	const int by = shake_y;
 
-	dst.TiledBlit(bx, by, sr, *src, dr, back_opacity);
+	if (!reduced) {
+		dst.TiledBlit(bx, by, sr, *src, dr, back_opacity);
+	}
 	dst.TiledBlit(fx, fy, sr, *src, dr, front_opacity);
 }
 
