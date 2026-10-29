@@ -54,7 +54,7 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
             autoconf automake bash bison build-essential ca-certificates cmake curl \
             flex gettext git gperf libtool libtool-bin make meson ninja-build patch perl \
-            pkg-config python3 python3-pip tar texinfo unzip wget xz-utils
+            libcurl4-openssl-dev libssl-dev pkg-config python3 python3-pip tar texinfo unzip wget xz-utils
           rm -rf /var/lib/apt/lists/*
           python3 -m pip install --break-system-packages --no-cache-dir 'meson==1.3.2'
           export PATH="/usr/local/bin:$PATH"
@@ -153,11 +153,14 @@ jobs:
         if: inputs.target != '3dsx'
         run: |
           set -euo pipefail
-          mkdir -p build-3ds/cia
-          bannertool makebanner \
-            -i resources/3ds/cia_builder/assets/banner.png \
-            -a resources/3ds/cia_builder/assets/audio.wav \
-            -o build-3ds/cia/banner.bnr
+          mkdir -p build-3ds/cia/banner
+          cp resources/3ds/banner/banner/* build-3ds/cia/banner/
+          bannertool makecwav \
+            -i resources/3ds/cia_builder/assets/audio.wav \
+            -o build-3ds/cia/banner/banner.bcwav
+          3dstool -c -t banner \
+            -f build-3ds/cia/banner.bin \
+            --banner-dir build-3ds/cia/banner
           bannertool makesmdh \
             -s "EasyRPG Player" \
             -l "Play RPG Maker 2000/2003 games" \
@@ -169,7 +172,7 @@ jobs:
             -elf build-3ds/easyrpg-player.elf \
             -rsf resources/3ds/cia_builder/app/cia_workaround.rsf \
             -icon build-3ds/cia/icon.icn \
-            -banner build-3ds/cia/banner.bnr
+            -banner build-3ds/cia/banner.bin
           test -s artifacts/easyrpg-player.cia
 
       - name: Upload 3DSX artifact
