@@ -1,0 +1,94 @@
+name: Stable Compilation
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      git-ref:
+        description: Git Ref (Optional)
+        required: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  docker:
+    name: ${{ matrix.image }} (${{ matrix.os.arch }})
+    runs-on: ${{ matrix.os.name }}
+    container:
+      image: ${{ matrix.image }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          #   version of: # CMake  | g++    | SDL    |     support end  #
+          # -------------------------------------------------------------
+          - ubuntu:22.04  # 3.22.1 | 11.2.0 | 2.0.20 | LTS       (5/27) #
+          - debian:12     # 3.25.1 | 12.2.0 | 2.26.5 | LTS       (6/28) #
+          - debian:13     # 3.31.6 | 14.2.0 | 2.32.4 | stable    (8/28) #
+          - ubuntu:26.04  # 4.2.3  | 15.2.0 | 3.4.2  | stable    (5/31) #
+        os:
+          - arch: x86_64
+            name: ubuntu-latest
+          - arch: arm64
+            name: ubuntu-26.04-arm
+        exclude:
+          - os:
+              arch: arm64
+            image: ubuntu:22.04 # too old, no arm images
+          - os:
+              arch: x86_64
+            image: ubuntu:26.04 # recent enough to be tested in the wild
+
+    steps:
+      - name: Install dependencies
+        run: |
+          SDLPKG=$(grep -q "26.04" /etc/os-release && echo "libsdl3-dev" || echo "libsdl2-dev")
+          export DEBIAN_FRONTEND="noninteractive"
+          apt-get update
+          apt-get install -yqq --no-install-recommends --no-install-suggests \
+            ca-certificates build-essential cmake ninja-build git \
+            libicu-dev libexpat1-dev libinih-dev nlohmann-json3-dev libpng-dev libpixman-1-dev \
+            libfmt-dev libfreetype6-dev libharfbuzz-dev libmpg123-dev libsndfile-dev \
+            libvorbis-dev libopusfile-dev libspeexdsp-dev liblhasa-dev $SDLPKG
+
+      - name: Clone Repository
+        uses: actions/checkout@v7
+        if: github.event.inputs.git-ref == ''
+      - name: Clone Repository (with custom ref)
+        uses: actions/checkout@v7
+        if: github.event.inputs.git-ref != ''
+        with:
+          ref: ${{ github.event.inputs.git-ref }}
+
+      - name: Use gcc problem matcher
+        run: echo "::add-matcher::.github/gcc_comment_matcher.json"
+
+      - name: Compile
+        run: |
+          VER="(GA-`uname -m`, `date +%Y-%m-%d`)"
+          SDLTARGET=$(grep -q "26.04" /etc/os-release && echo "SDL3" || echo "SDL2")
+          cmake -G Ninja -B build . \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wdeprecated -fsanitize=address,undefined" \
+            -DPLAYER_TARGET_PLATFORM="$SDLTARGET" \
+            -DPLAYER_BUILD_LIBLCF=ON -DPLAYER_VERSION_APPEND="$VER"
+          cmake --build build
+
+      - name: Install
+        run: |
+          cmake --install build
+
+      - name: Test
+        run: |
+          # make sure executable runs
+          build/easyrpg-player --version
+          # run unit tests
+          cmake --build build --target check

@@ -1,0 +1,75 @@
+Module.initApi = function() {
+  Module.api_private.download_js = function (buffer, size, filename) {
+    const blob = new Blob([Module.HEAPU8.slice(buffer, buffer + size)]);
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = UTF8ToString(filename);
+    link.click();
+    link.remove();
+  }
+
+  Module.api_private.createInputElement_js = function (id, event) {
+    let file = document.getElementById(id);
+    if (file == null) {
+      file = document.createElement('input');
+      file.type = 'file';
+      file.id = id;
+      file.style.display = 'none';
+      file.addEventListener('change', function (evt) {
+        const selected_file = evt.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function(file) {
+          event(file, selected_file.name);
+        }
+        reader.readAsArrayBuffer(selected_file);
+      });
+    }
+    file.click();
+  }
+
+  Module.api_private.uploadSavegame_js = function (slot) {
+    Module.api_private.createInputElement_js('easyrpg_saveFile', function (file) {
+      const result = new Uint8Array(file.currentTarget.result);
+      const buf = Module._malloc(result.length);
+      Module.HEAPU8.set(result, buf);
+      Module.api_private.uploadSavegameStep2(slot, buf, result.length);
+      Module._free(buf);
+      Module.api.refreshScene();
+    });
+  }
+
+  Module.api_private.uploadSoundfont_js = function () {
+    Module.api_private.createInputElement_js('easyrpg_sfFile', function (file, name) {
+      const result = new Uint8Array(file.currentTarget.result);
+      const content_buf = Module._malloc(result.length);
+      Module.HEAPU8.set(result, content_buf);
+      Module.api_private.uploadSoundfontStep2(name, content_buf, result.length);
+      Module._free(content_buf);
+      Module.api.refreshScene();
+    });
+  }
+
+  Module.api_private.uploadFont_js = function () {
+    Module.api_private.createInputElement_js('easyrpg_sfFile', function (file, name) {
+      const result = new Uint8Array(file.currentTarget.result);
+      const content_buf = Module._malloc(result.length);
+      Module.HEAPU8.set(result, content_buf);
+      Module.api_private.uploadFontStep2(name, content_buf, result.length);
+      Module._free(content_buf);
+      Module.api.refreshScene();
+    });
+  }
+}
+
+// Display the nice end message forever
+Module["onExit"] = function() {
+  // load image
+  const imageContent = FS.readFile("/tmp/message.png");
+  const img = document.createElement('img');
+  img.id = "canvas";
+  img.src = URL.createObjectURL(new Blob([imageContent], {type: "image/png"}));
+
+  // replace canvas
+  const cvs = document.getElementById('canvas');
+  cvs.parentNode.replaceChild(img, cvs);
+}
