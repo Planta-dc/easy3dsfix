@@ -70,15 +70,27 @@ jobs:
           path: |
             buildscripts/3ds/include
             buildscripts/3ds/lib
-          key: 3ds-deps-devkitarm-20260610-${{ steps.buildscripts.outputs.sha }}
+          key: 3ds-deps-devkitarm-20260610-mpg123-compat-v1-${{ steps.buildscripts.outputs.sha }}
 
       - name: Build EasyRPG's 3DS dependencies
         if: steps.dependency-cache.outputs.cache-hit != 'true'
         run: |
-          set -o pipefail
+          set -euo pipefail
           cd buildscripts/3ds
           export BUILD_LIBLCF=1
-          ./0_build_everything.sh 2>&1 | tee "$GITHUB_WORKSPACE/dependencies-build.log"
+
+          # Split the upstream bootstrap so mpg123 can be made compatible with
+          # Debian's libtool: it calls the obsolete LT_SYS_MODULE_EXT macro,
+          # but the 3DS build disables mpg123's optional dynamic modules.
+          ./1_download_library.sh 2>&1 | tee "$GITHUB_WORKSPACE/dependencies-build.log"
+
+          mpg123_dir="$(find . -maxdepth 1 -type d -name 'mpg123-*' -print -quit)"
+          test -n "$mpg123_dir"
+          sed -i '/^[[:space:]]*LT_SYS_MODULE_EXT[[:space:]]*$/d' "$mpg123_dir/configure.ac"
+          sed -i 's/--enable-libmpg123/--enable-libmpg123 --disable-modules/' ../shared/packages.sh
+
+          ./2_build_toolchain.sh 2>&1 | tee -a "$GITHUB_WORKSPACE/dependencies-build.log"
+          ./3_cleanup.sh 2>&1 | tee -a "$GITHUB_WORKSPACE/dependencies-build.log"
 
       - name: Configure Player
         run: |
