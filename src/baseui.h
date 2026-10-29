@@ -224,6 +224,9 @@ public:
 	 */
 	void SetFrameLimit(int fps_limit);
 
+	/** Enable or disable the reduced-render-rate performance mode. */
+	void SetPerformanceMode(bool enabled);
+
 	/** Sets the scaling mode of the window */
 	virtual void SetScalingMode(ConfigEnum::ScalingMode) {};
 

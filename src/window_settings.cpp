@@ -279,6 +279,9 @@ void Window_Settings::RefreshVideo() {
 	AddOption(cfg.fps, [this](){ DisplayUi->SetShowFps(static_cast<ConfigEnum::ShowFps>(GetCurrentOption().current_value)); });
 	AddOption(cfg.vsync, [](){ DisplayUi->ToggleVsync(); });
 	AddOption(cfg.fps_limit, [this](){ DisplayUi->SetFrameLimit(GetCurrentOption().current_value); });
+	AddOption(cfg.performance_mode, [this](){
+		DisplayUi->SetPerformanceMode(!DisplayUi->GetConfig().performance_mode.Get());
+	});
 	AddOption(cfg.stretch, []() { DisplayUi->ToggleStretch(); });
 	AddOption(cfg.scaling_mode, [this](){ DisplayUi->SetScalingMode(static_cast<ConfigEnum::ScalingMode>(GetCurrentOption().current_value)); });
 	AddOption(cfg.pause_when_focus_lost, [cfg]() mutable { DisplayUi->SetPauseWhenFocusLost(cfg.pause_when_focus_lost.Toggle()); });
