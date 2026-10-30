@@ -1,0 +1,27 @@
+diff --git a/3ds/1_download_library.sh b/3ds/1_download_library.sh
+index 070eb52..111b7a2 100755
+--- a/3ds/1_download_library.sh
++++ b/3ds/1_download_library.sh
+@@ -50,6 +50,10 @@ download_and_extract $TREMOR_URL
+ rm -rf $MPG123_DIR
+ download_and_extract $MPG123_URL
+ 
++# libsndfile
++rm -rf $LIBSNDFILE_DIR
++download_and_extract $LIBSNDFILE_URL
++
+ # libxmp-lite
+ rm -rf $LIBXMP_LITE_DIR
+ download_and_extract $LIBXMP_LITE_URL
+diff --git a/3ds/2_build_toolchain.sh b/3ds/2_build_toolchain.sh
+index 7796b5e..93ca91c 100755
+--- a/3ds/2_build_toolchain.sh
++++ b/3ds/2_build_toolchain.sh
+@@ -103,6 +103,7 @@ install_lib_cmake $EXPAT_DIR $EXPAT_ARGS
+ install_lib $LIBOGG_DIR $LIBOGG_ARGS
+ install_lib $TREMOR_DIR $TREMOR_ARGS
+ install_lib $MPG123_DIR $MPG123_ARGS
++install_lib $LIBSNDFILE_DIR $LIBSNDFILE_ARGS
+ install_lib_cmake $LIBXMP_LITE_DIR $LIBXMP_LITE_ARGS
+ install_lib $SPEEXDSP_DIR $SPEEXDSP_ARGS
+ install_lib_cmake $WILDMIDI_DIR $WILDMIDI_ARGS
