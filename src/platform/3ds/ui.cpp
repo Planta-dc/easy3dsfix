@@ -401,8 +401,8 @@ void CtrUi::UpdateDisplay() {
 			bottom_state = screen_state::keep;
 		}
 
-		// position with 2 pixels border at bottom right
-		draw_battery(GSP_SCREEN_HEIGHT_BOTTOM-2, GSP_SCREEN_WIDTH-2);
+		// Position with a 2-pixel border at the bottom right of the 4x4 keypad.
+		draw_battery(button_width * 4 - 2, button_height * 4 - 2);
 	}
 #endif
 
