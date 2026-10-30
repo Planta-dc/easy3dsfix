@@ -94,7 +94,7 @@ jobs:
           path: |
             buildscripts/3ds/include
             buildscripts/3ds/lib
-          key: 3ds-deps-devkitarm-20260610-meson1.3.2-mpg123-compat-v1-libsndfile-v1-${{ steps.buildscripts.outputs.sha }}
+          key: 3ds-deps-devkitarm-20260610-meson1.3.2-mpg123-compat-v1-libsndfile-v2-${{ steps.buildscripts.outputs.sha }}
 
       - name: Build EasyRPG's 3DS dependencies
         if: steps.dependency-cache.outputs.cache-hit != 'true'
@@ -107,6 +107,7 @@ jobs:
           # Debian's libtool: it calls the obsolete LT_SYS_MODULE_EXT macro,
           # but the 3DS build disables mpg123's optional dynamic modules.
           ./1_download_library.sh 2>&1 | tee "$GITHUB_WORKSPACE/dependencies-build.log"
+          patch -d libsndfile-1.2.2 -p1 < "$GITHUB_WORKSPACE/.github/patches/libsndfile-3ds-alac-int32.patch"
 
           mpg123_dir="$(find . -maxdepth 1 -type d -name 'mpg123-*' -print -quit)"
           test -n "$mpg123_dir"
