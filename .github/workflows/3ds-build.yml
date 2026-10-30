@@ -12,6 +12,11 @@ on:
           - cia
         default: both
         required: true
+      version_label:
+        description: "Custom label appended to the EasyRPG Player version"
+        type: string
+        default: "3DS.5.4"
+        required: true
 
 permissions:
   contents: read
@@ -35,6 +40,7 @@ jobs:
     env:
       DEVKITPRO: /opt/devkitpro
       DEVKITARM: /opt/devkitpro/devkitARM
+      PLAYER_3DS_VERSION_LABEL: ${{ inputs.version_label }}
 
     steps:
       - name: Check out Player
@@ -136,7 +142,8 @@ jobs:
             -DPLAYER_TARGET_PLATFORM=3ds \
             -DPLAYER_BUILD_LIBLCF=OFF \
             -DPLAYER_ENABLE_TESTS=OFF \
-            -DPLAYER_BUNDLE=OFF 2>&1 | tee configure-3ds.log
+            -DPLAYER_BUNDLE=OFF \
+            -DPLAYER_VERSION_APPEND="$PLAYER_3DS_VERSION_LABEL" 2>&1 | tee configure-3ds.log
 
       - name: Compile Player
         run: |
