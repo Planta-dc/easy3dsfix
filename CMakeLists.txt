@@ -506,7 +506,11 @@ if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 # Version setup
+set(PLAYER_VERSION_OVERRIDE "" CACHE STRING "Override the Player version shown in the application")
 set(PLAYER_VERSION ${PROJECT_VERSION})
+if(NOT PLAYER_VERSION_OVERRIDE STREQUAL "")
+	set(PLAYER_VERSION ${PLAYER_VERSION_OVERRIDE})
+endif()
 if(NOT PROJECT_VERSION_TWEAK)
 	# a kludge to match the valid version format
 	set(PROJECT_VERSION_TWEAK 0)

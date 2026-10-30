@@ -13,9 +13,9 @@ on:
         default: both
         required: true
       version_label:
-        description: "Custom label appended to the EasyRPG Player version"
+        description: "Version shown in the app"
         type: string
-        default: "3DS-test.1"
+        default: "0.8.1fix11"
         required: true
 
 permissions:
@@ -143,7 +143,8 @@ jobs:
             -DPLAYER_BUILD_LIBLCF=OFF \
             -DPLAYER_ENABLE_TESTS=OFF \
             -DPLAYER_BUNDLE=OFF \
-            -DPLAYER_VERSION_APPEND="$PLAYER_3DS_VERSION_LABEL" 2>&1 | tee configure-3ds.log
+            -DPLAYER_VERSION_OVERRIDE="$PLAYER_3DS_VERSION_LABEL" \
+            -DPLAYER_VERSION_APPEND="" 2>&1 | tee configure-3ds.log
 
       - name: Compile Player
         run: |
