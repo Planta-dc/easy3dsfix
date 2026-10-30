@@ -13,9 +13,9 @@ on:
         default: both
         required: true
       version_label:
-        description: "Version label: upstream-version-3DS.N; increment N for each custom 3DS build"
+        description: "Version label: upstream-version-3DS.PR, using the pull request number"
         type: string
-        default: "0.8.1-3DS.1"
+        default: "0.8.1-3DS.11"
         required: true
 
 permissions:
