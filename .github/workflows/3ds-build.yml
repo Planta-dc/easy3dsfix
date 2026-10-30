@@ -84,6 +84,9 @@ jobs:
           git -C buildscripts checkout --detach 84cf2f449a0d1c09f17d2bbf3d28f4f573aa718a
           echo "sha=$(git -C buildscripts rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
+      - name: Enable libsndfile in the pinned 3DS dependency recipe
+        run: patch -d buildscripts -p1 < .github/patches/buildscripts-3ds-libsndfile.patch
+
       - name: Cache 3DS dependency prefix
         id: dependency-cache
         uses: actions/cache@v4
@@ -91,7 +94,7 @@ jobs:
           path: |
             buildscripts/3ds/include
             buildscripts/3ds/lib
-          key: 3ds-deps-devkitarm-20260610-meson1.3.2-mpg123-compat-v1-${{ steps.buildscripts.outputs.sha }}
+          key: 3ds-deps-devkitarm-20260610-meson1.3.2-mpg123-compat-v1-libsndfile-v1-${{ steps.buildscripts.outputs.sha }}
 
       - name: Build EasyRPG's 3DS dependencies
         if: steps.dependency-cache.outputs.cache-hit != 'true'
@@ -142,9 +145,15 @@ jobs:
             -DPLAYER_TARGET_PLATFORM=3ds \
             -DPLAYER_BUILD_LIBLCF=OFF \
             -DPLAYER_ENABLE_TESTS=OFF \
+            -DPLAYER_WITH_LIBSNDFILE=ON \
             -DPLAYER_BUNDLE=OFF \
             -DPLAYER_VERSION_OVERRIDE="$PLAYER_3DS_VERSION_LABEL" \
             -DPLAYER_VERSION_APPEND="" 2>&1 | tee configure-3ds.log
+
+          if ! grep -Eq '^-- WAV playback: .*libsndfile' configure-3ds.log; then
+            echo "libsndfile was requested but not enabled in the 3DS build."
+            exit 1
+          fi
 
       - name: Compile Player
         run: |
