@@ -67,7 +67,8 @@ private:
 #ifdef __3DS__
 	BitmapRef performance_bitmap;
 	Rect performance_rect;
-	std::string performance_text;
+	std::string performance_line1;
+	std::string performance_line2;
 	bool draw_performance_monitor = false;
 	bool performance_dirty = true;
 #endif
