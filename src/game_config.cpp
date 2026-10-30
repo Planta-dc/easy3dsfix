@@ -79,6 +79,9 @@ void Game_ConfigVideo::Hide() {
 	fullscreen.SetOptionVisible(false);
 	fps_limit.SetOptionVisible(false);
 	performance_mode.SetOptionVisible(false);
+#ifdef __3DS__
+	frame_skip.SetOptionVisible(false);
+#endif
 	battle_animation_frames.SetOptionVisible(false);
 	flash_tone_effects.SetOptionVisible(false);
 	weather_effects.SetOptionVisible(false);
@@ -599,6 +602,10 @@ void Game_Config::LoadFromStream(Filesystem_Stream::InputStream& is) {
 	video.fps_limit.FromIni(ini);
 	video.performance_mode.FromIni(ini);
 #ifdef __3DS__
+	if (!video.frame_skip.FromIni(ini) && ini.HasValue("Video", "PerformanceMode")) {
+		// Migrate the former 30 FPS toggle to equivalent frame-skip level 0 or 1.
+		video.frame_skip.Set(video.performance_mode.Get() ? 1 : 0);
+	}
 	video.performance_monitor.FromIni(ini);
 #endif
 	video.battle_animation_frames.FromIni(ini);
@@ -705,6 +712,7 @@ void Game_Config::WriteToStream(Filesystem_Stream::OutputStream& os) const {
 	video.fps_limit.ToIni(os);
 	video.performance_mode.ToIni(os);
 #ifdef __3DS__
+	video.frame_skip.ToIni(os);
 	video.performance_monitor.ToIni(os);
 #endif
 	video.battle_animation_frames.ToIni(os);

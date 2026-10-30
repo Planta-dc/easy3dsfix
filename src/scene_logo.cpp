@@ -199,8 +199,15 @@ void Scene_Logo::DrawTextOnLogo(bool verbose) {
 	Color shadow_color = {69, 69, 69, 255};
 	logo_img->ClearRect(text_rect);
 
+#ifdef __3DS__
+	// Keep the custom 3DS build label visible on the startup screen.
+	const auto version_text = Version::GetVersionString(verbose, true);
+#else
+	const auto version_text = Version::GetVersionString(verbose, verbose);
+#endif
+
 	for (auto& color: {shadow_color, text_color}) {
-		logo_img->TextDraw(text_rect, color, "v" + Version::GetVersionString(verbose, verbose), Text::AlignLeft);
+		logo_img->TextDraw(text_rect, color, "v" + version_text, Text::AlignLeft);
 		if (!verbose) {
 			logo_img->TextDraw(text_rect, color, WEBSITE_ADDRESS, Text::AlignRight);
 		}

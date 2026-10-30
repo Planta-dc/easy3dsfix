@@ -12,6 +12,11 @@ on:
           - cia
         default: both
         required: true
+      version_label:
+        description: "Version label: upstream-version-3DS.PR, using the pull request number"
+        type: string
+        default: "0.8.1-3DS.11"
+        required: true
 
 permissions:
   contents: read
@@ -35,6 +40,7 @@ jobs:
     env:
       DEVKITPRO: /opt/devkitpro
       DEVKITARM: /opt/devkitpro/devkitARM
+      PLAYER_3DS_VERSION_LABEL: ${{ inputs.version_label }}
 
     steps:
       - name: Check out Player
@@ -136,7 +142,9 @@ jobs:
             -DPLAYER_TARGET_PLATFORM=3ds \
             -DPLAYER_BUILD_LIBLCF=OFF \
             -DPLAYER_ENABLE_TESTS=OFF \
-            -DPLAYER_BUNDLE=OFF 2>&1 | tee configure-3ds.log
+            -DPLAYER_BUNDLE=OFF \
+            -DPLAYER_VERSION_OVERRIDE="$PLAYER_3DS_VERSION_LABEL" \
+            -DPLAYER_VERSION_APPEND="" 2>&1 | tee configure-3ds.log
 
       - name: Compile Player
         run: |
@@ -162,8 +170,8 @@ jobs:
             -f build-3ds/cia/banner.bin \
             --banner-dir build-3ds/cia/banner
           bannertool makesmdh \
-            -s "EasyRPG Player" \
-            -l "Play RPG Maker 2000/2003 games" \
+            -s "EasyRPG Player $PLAYER_3DS_VERSION_LABEL" \
+            -l "Player $PLAYER_3DS_VERSION_LABEL - Play RPG Maker 2000/2003 games" \
             -p "EasyRPG Team" \
             -i resources/3ds/icon.png \
             -o build-3ds/cia/icon.icn
@@ -179,7 +187,7 @@ jobs:
         if: inputs.target != 'cia'
         uses: actions/upload-artifact@v4
         with:
-          name: easyrpg-player-3dsx
+          name: easyrpg-player-3dsx-${{ inputs.version_label }}
           path: artifacts/easyrpg-player/easyrpg-player.3dsx
           if-no-files-found: error
           retention-days: 14
@@ -188,7 +196,7 @@ jobs:
         if: inputs.target != '3dsx'
         uses: actions/upload-artifact@v4
         with:
-          name: easyrpg-player-cia
+          name: easyrpg-player-cia-${{ inputs.version_label }}
           path: artifacts/easyrpg-player.cia
           if-no-files-found: error
           retention-days: 14

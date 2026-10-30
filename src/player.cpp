@@ -1097,7 +1097,8 @@ void Player::ResetGameObjects() {
 	// Reset SetGameOption global settings
 	// Differs from Maniac Patch which simply keeps them upon reset
 #if defined(__3DS__)
-	Player::SetFrameSkip(DisplayUi && DisplayUi->GetConfig().performance_mode.Get() ? 50 : 100);
+	const int frame_skip = DisplayUi ? DisplayUi->GetConfig().frame_skip.Get() : 0;
+	Player::SetFrameSkip(100 / (frame_skip + 1));
 #else
 	Player::SetFrameSkip(100);
 #endif
