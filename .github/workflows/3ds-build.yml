@@ -15,7 +15,7 @@ on:
       version_label:
         description: "Custom label appended to the EasyRPG Player version"
         type: string
-        default: "3DS.5.4"
+        default: "3DS-test.1"
         required: true
 
 permissions:
