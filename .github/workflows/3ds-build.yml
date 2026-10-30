@@ -94,7 +94,7 @@ jobs:
           path: |
             buildscripts/3ds/include
             buildscripts/3ds/lib
-          key: 3ds-deps-devkitarm-20260610-meson1.3.2-mpg123-compat-v1-libsndfile-v2-${{ steps.buildscripts.outputs.sha }}
+          key: 3ds-deps-devkitarm-20260610-meson1.3.2-mpg123-compat-v1-libsndfile-v3-${{ steps.buildscripts.outputs.sha }}
 
       - name: Build EasyRPG's 3DS dependencies
         if: steps.dependency-cache.outputs.cache-hit != 'true'
