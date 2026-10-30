@@ -20,6 +20,8 @@
 #include "bitmap.h"
 #include "player.h"
 
+#include <algorithm>
+
 #if USE_SDL==3
 #  include "platform/sdl/sdl3_ui.h"
 #elif USE_SDL==2
@@ -80,6 +82,12 @@ void BaseUi::SetPerformanceMode(bool enabled) {
 }
 
 #ifdef __3DS__
+void BaseUi::SetFrameSkipLevel(int level) {
+	level = std::clamp(level, 0, 9);
+	vcfg.frame_skip.Set(level);
+	Player::SetFrameSkip(100 / (level + 1));
+}
+
 void BaseUi::SetPerformanceMonitor(bool enabled) {
 	vcfg.performance_monitor.Set(enabled);
 }

@@ -279,9 +279,15 @@ void Window_Settings::RefreshVideo() {
 	AddOption(cfg.fps, [this](){ DisplayUi->SetShowFps(static_cast<ConfigEnum::ShowFps>(GetCurrentOption().current_value)); });
 	AddOption(cfg.vsync, [](){ DisplayUi->ToggleVsync(); });
 	AddOption(cfg.fps_limit, [this](){ DisplayUi->SetFrameLimit(GetCurrentOption().current_value); });
+#ifdef __3DS__
+	AddOption(cfg.frame_skip, [this]() {
+		DisplayUi->SetFrameSkipLevel(GetCurrentOption().current_value);
+	});
+#else
 	AddOption(cfg.performance_mode, [this](){
 		DisplayUi->SetPerformanceMode(!DisplayUi->GetConfig().performance_mode.Get());
 	});
+#endif
 #ifdef __3DS__
 	AddOption(cfg.performance_monitor, [this]() {
 		DisplayUi->SetPerformanceMonitor(!DisplayUi->GetConfig().performance_monitor.Get());

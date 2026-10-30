@@ -137,6 +137,7 @@ struct Game_ConfigVideo {
 	RangeConfigParam<int> fps_limit{ "Frame Limiter", "Toggle the frames per second limit (Recommended: 60)", "Video", "FpsLimit", DEFAULT_FPS, 0, 99999 };
 #ifdef __3DS__
 	BoolConfigParam performance_mode{ "Performance mode (30 FPS)", "Render every other frame to reduce 3DS graphics work; game timing remains unchanged", "Video", "PerformanceMode", true };
+	RangeConfigParam<int> frame_skip{ "Frame skip", "0 draws every frame; 1 draws every other frame; higher values skip more rendering without skipping game updates or audio", "Video", "FrameSkip", 1, 0, 9 };
 	BoolConfigParam performance_monitor{ "Performance monitor", "Show allocator and linear-memory free space plus frame/update/render-display times on the top screen (not a CPU percentage)", "Video", "PerformanceMonitor", false };
 #else
 	BoolConfigParam performance_mode{ "Performance mode (30 FPS)", "Render every other frame to reduce 3DS graphics work; game timing remains unchanged", "Video", "PerformanceMode", false };
