@@ -195,7 +195,7 @@ jobs:
 
       - name: Upload 3DSX artifact
         if: inputs.target != 'cia'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: easyrpg-player-3dsx-${{ inputs.version_label }}
           path: artifacts/easyrpg-player/easyrpg-player.3dsx
@@ -204,7 +204,7 @@ jobs:
 
       - name: Upload CIA artifact
         if: inputs.target != '3dsx'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: easyrpg-player-cia-${{ inputs.version_label }}
           path: artifacts/easyrpg-player.cia
@@ -213,7 +213,7 @@ jobs:
 
       - name: Upload build log on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 3ds-build-log
           path: |
