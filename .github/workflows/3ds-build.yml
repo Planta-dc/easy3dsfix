@@ -89,7 +89,7 @@ jobs:
 
       - name: Cache 3DS dependency prefix
         id: dependency-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             buildscripts/3ds/include
